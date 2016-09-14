@@ -1,5 +1,5 @@
 //
-//  BaseTestCase.swift
+//  DispatchQueue+Alamofire.swift
 //
 //  Copyright (c) 2014-2016 Alamofire Software Foundation (http://alamofire.org/)
 //
@@ -22,25 +22,21 @@
 //  THE SOFTWARE.
 //
 
-import Alamofire
-import Foundation
-import XCTest
+import Dispatch
 
-class BaseTestCase: XCTestCase {
-    let timeout: TimeInterval = 30.0
+extension DispatchQueue {
+    static var userInteractive: DispatchQueue { return DispatchQueue.global(qos: .userInteractive) }
+    static var userInitiated: DispatchQueue { return DispatchQueue.global(qos: .userInitiated) }
+    static var utility: DispatchQueue { return DispatchQueue.global(qos: .utility) }
+    static var background: DispatchQueue { return DispatchQueue.global(qos: .background) }
 
-    static var testDirectoryURL: URL { return FileManager.temporaryDirectoryURL.appendingPathComponent("org.alamofire.tests") }
-    var testDirectoryURL: URL { return BaseTestCase.testDirectoryURL }
-
-    override func setUp() {
-        super.setUp()
-
-        FileManager.removeAllItemsInsideDirectory(at: testDirectoryURL)
-        FileManager.createDirectory(at: testDirectoryURL)
+    func after(_ delay: TimeInterval, execute closure: @escaping () -> Void) {
+        asyncAfter(deadline: .now() + delay, execute: closure)
     }
 
-    func url(forResource fileName: String, withExtension ext: String) -> URL {
-        let bundle = Bundle(for: BaseTestCase.self)
-        return bundle.url(forResource: fileName, withExtension: ext)!
+    func syncResult<T>(_ closure: () -> T) -> T {
+        var result: T!
+        sync { result = closure() }
+        return result
     }
 }
